@@ -31,13 +31,14 @@ For example:
 $$
 \phi_1(X) = X
 $$
+
 $$
 \phi_2(X) = X^2
 $$
 
 Other possible basis functions:
 
-| Basis Function | Meaning |
+| Basis function | Meaning |
 |:---|:---|
 | $\phi_1(X) = X$ | Original feature |
 | $\phi_2(X) = X^2$ | Square |
@@ -91,7 +92,7 @@ This gives the model the ability to represent the quadratic pattern.
 
 ## 4. Transform the Dataset
 
-### Original Dataset
+### Original dataset:
 | $X$ | $Y$ |
 |:---:|:---:|
 | 1 | 1 |
@@ -108,7 +109,7 @@ $$
 \phi_2(X) = X^2
 $$
 
-### Transformed Dataset
+### Transformed dataset:
 | $X$ | $\phi_1(X) = X$ | $\phi_2(X) = X^2$ | $Y$ |
 |:---:|:---:|:---:|:---:|
 | 1 | 1 | 1 | 1 |
@@ -153,7 +154,7 @@ $$
 \hat{y} = w_0 + w_1X + w_2X^2
 $$
 
-The model is nonlinear with respect to the original input ($X$), because it contains $X^2$.
+The model is nonlinear with respect to the original input ($X$), because it contains ($X^2$).
 
 However, it is linear with respect to the parameters (weights):
 $$
@@ -162,10 +163,10 @@ $$
 
 Each weight is multiplied by a feature and then added.
 
-**Therefore:**
+**Therefore:**  
 It is nonlinear with respect to input $X$, but linear with respect to model parameters.
 
-That is why it is called a **Linear Basis Function Model**.
+That is why it is called a Linear Basis Function Model.
 
 ---
 
@@ -262,11 +263,17 @@ All predictions match the actual values.
 
 ### Step 8: Calculate SSE and MSE
 $$
-\text{SSE} = \sum (\hat{y} - Y)^2 = 0
+\text{SSE} = \sum (\hat{y} - Y)^2
+$$
+$$
+\text{SSE} = 0
 $$
 
 $$
-\text{MSE} = \frac{\text{SSE}}{n} = \frac{0}{5} = \boxed{0}
+\text{MSE} = \frac{\text{SSE}}{n} = \frac{0}{5}
+$$
+$$
+\boxed{\text{MSE} = 0}
 $$
 
 The quadratic model perfectly represents this particular dataset.
@@ -294,27 +301,38 @@ All predictions are zero.
 
 ### Step 3: Calculate errors
 $$
-\text{Error} = \hat{y} - Y = [-1, -4, -9, -16, -25]
+\text{Error} = \hat{y} - Y
+$$
+$$
+[-1, -4, -9, -16, -25]
 $$
 
 ### Step 4: Calculate initial cost
 $$
-J(w) = \frac{1}{2n} \sum (\hat{y} - Y)^2 = \frac{1}{10}[1 + 16 + 81 + 256 + 625] = \boxed{97.9}
+J(w) = \frac{1}{2n} \sum (\hat{y} - Y)^2
+$$
+$$
+= \frac{1}{10}[1 + 16 + 81 + 256 + 625]
+$$
+$$
+\boxed{J = 97.9}
 $$
 
 ### Step 5: Calculate gradients
-- For $w_0$:
-  $$
-  \frac{\partial J}{\partial w_0} = \frac{1}{n} \sum \text{Error} = \frac{-55}{5} = \boxed{-11}
-  $$
-- For $w_1$:
-  $$
-  \frac{\partial J}{\partial w_1} = \frac{1}{n} \sum (\text{Error} \times X) = \frac{-225}{5} = \boxed{-45}
-  $$
-- For $w_2$:
-  $$
-  \frac{\partial J}{\partial w_2} = \frac{1}{n} \sum (\text{Error} \times X^2) = \frac{-979}{5} = \boxed{-195.8}
-  $$
+For $w_0$:
+$$
+\frac{\partial J}{\partial w_0} = \frac{1}{n} \sum \text{Error} = \frac{-55}{5} = \boxed{-11}
+$$
+
+For $w_1$:
+$$
+\frac{\partial J}{\partial w_1} = \frac{1}{n} \sum (\text{Error} \times X) = \frac{-225}{5} = \boxed{-45}
+$$
+
+For $w_2$:
+$$
+\frac{\partial J}{\partial w_2} = \frac{1}{n} \sum (\text{Error} \times X^2) = \frac{-979}{5} = \boxed{-195.8}
+$$
 
 ### Step 6: Update weights
 Formula:
@@ -323,9 +341,15 @@ w_j^{\text{new}} = w_j^{\text{old}} - \alpha \times \text{Gradient}
 $$
 
 Using $\alpha = 0.001$:
-- $w_0 = 0 - (0.001 \times -11) = \boxed{0.011}$
-- $w_1 = 0 - (0.001 \times -45) = \boxed{0.045}$
-- $w_2 = 0 - (0.001 \times -195.8) = \boxed{0.1958}$
+$$
+w_0 = 0 - (0.001 \times -11) = \boxed{w_0 = 0.011}
+$$
+$$
+w_1 = 0 - (0.001 \times -45) = \boxed{w_1 = 0.045}
+$$
+$$
+w_2 = 0 - (0.001 \times -195.8) = \boxed{w_2 = 0.1958}
+$$
 
 New model:
 $$
@@ -333,7 +357,10 @@ $$
 $$
 
 ### Step 7: Calculate new cost
-New predictions: $[0.2518,\ 0.8842,\ 1.9082,\ 3.3238,\ 5.1310]$  
+New predictions:
+$$
+[0.2518,\ 0.8842,\ 1.9082,\ 3.3238,\ 5.1310]
+$$
 New cost:
 $$
 \boxed{J = 61.60248}
@@ -353,18 +380,26 @@ Suppose we have two original input features:
 - $X_2$ = Number of bedrooms
 
 We can create basis functions for both features.
+
 For size:
 $$
-\phi_1(X_1) = X_1, \quad \phi_2(X_1) = X_1^2
+\phi_1(X_1) = X_1
 $$
+$$
+\phi_2(X_1) = X_1^2
+$$
+
 For bedrooms:
 $$
-\phi_3(X_2) = X_2, \quad \phi_4(X_2) = X_2^2
+\phi_3(X_2) = X_2
+$$
+$$
+\phi_4(X_2) = X_2^2
 $$
 
 Now we have four transformed features.
 
-### Transformed Dataset
+### Transformed dataset:
 | House | $X_1$ | $X_1^2$ | $X_2$ | $X_2^2$ | $Y$ |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | A | 1 | 1 | 1 | 1 | 10 |
@@ -373,9 +408,11 @@ Now we have four transformed features.
 | D | 4 | 16 | 2 | 4 | 25 |
 | E | 5 | 25 | 3 | 9 | 30 |
 
-### Model Equation
+### Model equation:
 $$
-\boxed{\hat{y} = w_0 + w_1X_1 + w_2X_1^2 + w_3X_2 + w_4X_2^2}
+\boxed{
+\hat{y} = w_0 + w_1X_1 + w_2X_1^2 + w_3X_2 + w_4X_2^2
+}
 $$
 
 There are:
@@ -397,6 +434,7 @@ We can add another basis function:
 $$
 \phi_5(X_1, X_2) = X_1X_2
 $$
+
 Then:
 $$
 \hat{y} = w_0 + w_1X_1 + w_2X_1^2 + w_3X_2 + w_4X_2^2 + w_5X_1X_2
@@ -413,13 +451,15 @@ Now there are six coefficients, including the intercept.
 For one or more input features, the general Linear Basis Function Model can be written as:
 
 $$
-\boxed{\hat{y} = w_0 + \sum_{j=1}^{M} w_j\phi_j(X)}
+\boxed{
+\hat{y} = w_0 + \sum_{j=1}^{M} w_j\phi_j(X)
+}
 $$
 
 Where:
 
 | Symbol | Meaning |
-|:---:|:---|
+|:---|:---|
 | $M$ | Number of transformed features |
 | $w_0$ | Intercept |
 | $w_j$ | Weight for the $j$-th feature |
