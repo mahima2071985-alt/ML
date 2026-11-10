@@ -1,42 +1,57 @@
-# Multiclass Logistic Regression – Complete Notes
+# Multiclass Logistic Regression – Complete Numerical Example
 
-## 1. What is Multiclass Logistic Regression?
+## Learning Objective
+Build a Multiclass Logistic Regression model from scratch using one dataset. We will perform:
+1. Dataset preparation
+2. Label Encoding and One-Hot Encoding
+3. Model initialization
+4. Three linear equations
+5. Logit calculation
+6. Softmax probability calculation
+7. Final class prediction
+8. Cross Entropy Loss
+9. Gradient calculation
+10. Weight and bias updates
+11. Repeated training iterations
+12. Stopping criteria
+13. Final prediction using trained weights
+14. Model evaluation
 
-Multiclass Logistic Regression is a supervised machine learning algorithm used to classify data into more than two classes.
-
-**Example:** *Student Result Prediction*  
-We want to predict whether a student will **Fail**, get **Average**, or get **Excellent** based on study hours.
-
-### Binary vs Multiclass Classification
-
-| Feature | Binary Classification | Multiclass Classification |
-| :--- | :--- | :--- |
-| **Number of Classes** | Two classes | More than two classes |
-| **Example** | Pass / Fail | Fail / Average / Excellent |
-| **Possible Outcomes** | Two possible outcomes | Three or more possible outcomes |
-
-Our problem has three classes, so we use **Multiclass Logistic Regression**.
+> **Important:** We will not assume that the model already knows its weights. We will start with zero weights and learn them using Gradient Descent.
 
 ---
 
-## 2. Dataset Preparation
+## 1. Understand the Problem
 
-We will use the following dataset throughout this example.
+Suppose we want to predict a student's performance based on the number of hours they study. There are three possible results:
+- **Fail**
+- **Average**
+- **Excellent**
+
+This is a **Multiclass Classification** problem because the target has more than two possible classes.
+
+### 1.1 Our Dataset
 
 | Student | Study Hours ($X$) | Result ($Y$) |
 | :---: | :---: | :---: |
 | A | 1 | Fail |
 | B | 2 | Fail |
-| C | 3 | Average |
-| D | 4 | Average |
-| E | 5 | Excellent |
-| F | 6 | Excellent |
+| C | 3 | Fail |
+| D | 3 | Average |
+| E | 4 | Average |
+| F | 5 | Average |
+| G | 5 | Excellent |
+| H | 6 | Excellent |
+| I | 7 | Excellent |
 
-- **Input ($X$):** Study Hours  
-- **Output ($Y$):** Student Result  
+We deliberately have some overlapping observations: students studying 3 hours can be *Fail* or *Average*, and students studying 5 hours can be *Average* or *Excellent*. This makes the training example more realistic than a perfectly separable dataset.
 
-### 2.1 Class Encoding
-Computers need numerical representations of class labels.
+---
+
+## 2. Prepare the Dataset
+
+### 2.1 Label Encoding
+The computer needs numerical values instead of text labels.
 
 | Class | Encoded Value |
 | :--- | :---: |
@@ -45,10 +60,10 @@ Computers need numerical representations of class labels.
 | Excellent | `2` |
 
 Therefore:
-$$Y = [0, 0, 1, 1, 2, 2]$$
+$$Y = [0, 0, 0, 1, 1, 1, 2, 2, 2]$$
 
 ### 2.2 One-Hot Encoding
-One-hot encoding represents each class using a binary vector.
+We represent each actual class using a binary vector.
 
 | Class | Fail | Average | Excellent |
 | :--- | :---: | :---: | :---: |
@@ -62,237 +77,213 @@ One-hot encoding represents each class using a binary vector.
 | :---: | :---: | :---: | :---: | :---: |
 | A | 1 | 1 | 0 | 0 |
 | B | 2 | 1 | 0 | 0 |
-| C | 3 | 0 | 1 | 0 |
-| D | 4 | 0 | 1 | 0 |
-| E | 5 | 0 | 0 | 1 |
-| F | 6 | 0 | 0 | 1 |
+| C | 3 | 1 | 0 | 0 |
+| D | 3 | 0 | 1 | 0 |
+| E | 4 | 0 | 1 | 0 |
+| F | 5 | 0 | 1 | 0 |
+| G | 5 | 0 | 0 | 1 |
+| H | 6 | 0 | 0 | 1 |
+| I | 7 | 0 | 0 | 1 |
 
-**Example:** Student E's actual result is *Excellent*.
-- One-hot encoding = $[0, 0, 1]$
-- Only the actual class receives `1`, while all other classes receive `0`.
-
----
-
-## 3. Model Architecture – Three Linear Equations
-
-In Binary Logistic Regression, we use one linear equation:
-$$z = w_0 + w_1 X$$
-
-In Multiclass Logistic Regression, we have three classes. Therefore, we calculate three separate class scores.
-
-- **Equation 1 – Fail:**
-  $$z_0 = w_{00} + w_{01} X$$
-- **Equation 2 – Average:**
-  $$z_1 = w_{10} + w_{11} X$$
-- **Equation 3 – Excellent:**
-  $$z_2 = w_{20} + w_{21} X$$
-
-**Where:**
-- $X$ = Input (Study Hours)
-- $w_0$ = Bias or intercept
-- $w_1$ = Weight or coefficient
-- $z$ = Raw model score (logit)
-
-> **Important:** Each class has its own bias and weight. The model learns these parameters during training using **Gradient Descent**. We do not know the correct weights in advance.
+**Example:** Student E's actual class is *Average* ($Y = [0, 1, 0]$). Only the actual class receives `1`, while others receive `0`.
 
 ---
 
-## 4. Calculate Model Scores (Logits)
+## 3. Initialize the Model
 
-For understanding the prediction process, consider a new student who studies 4.5 hours ($X = 4.5$).
+We have three classes, so we need three class-specific linear equations.
 
-Assume the following illustrative weights have already been learned:
+### 3.1 Linear Equations
+- **Fail:** $z_0 = b_0 + w_0 X$
+- **Average:** $z_1 = b_1 + w_1 X$
+- **Excellent:** $z_2 = b_2 + w_2 X$
 
-| Class | Bias ($w_0$) | Weight ($w_1$) |
+Each class has:
+- One bias ($b$)
+- One weight ($w$)
+- Total parameters = $3 \text{ biases} + 3 \text{ weights} = 6$.
+
+### 3.2 Initialize Weights and Biases
+For our first training iteration, initialize everything to zero:
+
+| Class | Initial Bias ($b$) | Initial Weight ($w$) |
 | :--- | :---: | :---: |
-| **Fail** | 3 | -1 |
-| **Average** | 0 | 0.5 |
-| **Excellent** | -3 | 1 |
-
-### 4.1 Calculate Fail Score ($z_0$)
-$$z_0 = 3 + (-1 \times 4.5) = 3 - 4.5 = -1.5$$
-
-### 4.2 Calculate Average Score ($z_1$)
-$$z_1 = 0 + (0.5 \times 4.5) = 2.25$$
-
-### 4.3 Calculate Excellent Score ($z_2$)
-$$z_2 = -3 + (1 \times 4.5) = -3 + 4.5 = 1.5$$
-
-### 4.4 Score Comparison
-
-| Class | Logit (Score $z$) |
-| :--- | :---: |
-| Fail | -1.50 |
-| **Average** | **2.25** |
-| Excellent | 1.50 |
-
-The highest raw score is **2.25**, which belongs to **Average**.
-
-> **Note:** Logits are raw scores, not probabilities. We cannot interpret them directly as percentages.
-
----
-
-## 5. Softmax Function
-
-Softmax converts raw class scores (logits) into normalized probability distributions.
-
-### Formula
-$$P(\text{class } k) = \frac{e^{z_k}}{\sum_{j=1}^{K} e^{z_j}}$$
-
-**Where:**
-- $z_k$ = Score of the target class
-- $e$ = Euler's constant ($\approx 2.71828$)
-- $\sum e^{z_j}$ = Sum of exponential values across all classes
-- $K$ = Total number of classes
-
-### 5.1 Calculate Exponential Values
-
-Given logits: $z_0 = -1.5$, $z_1 = 2.25$, $z_2 = 1.5$
-
-- **Fail:** $e^{-1.5} = 0.2231$
-- **Average:** $e^{2.25} = 9.4877$
-- **Excellent:** $e^{1.5} = 4.4817$
-
-| Class | Logit ($z$) | Exponential ($e^z$) |
-| :--- | :---: | :---: |
-| Fail | -1.5 | 0.2231 |
-| Average | 2.25 | 9.4877 |
-| Excellent | 1.5 | 4.4817 |
-
-### 5.2 Calculate Denominator (Sum of Exponentials)
-$$\sum e^{z_j} = 0.2231 + 9.4877 + 4.4817 = 14.1925$$
-
-### 5.3 Calculate Class Probabilities
-
-- **Fail:**
-  $$P(\text{Fail}) = \frac{0.2231}{14.1925} \approx 0.0157 \quad (1.57\%)$$
-- **Average:**
-  $$P(\text{Average}) = \frac{9.4877}{14.1925} \approx 0.6685 \quad (66.85\%)$$
-- **Excellent:**
-  $$P(\text{Excellent}) = \frac{4.4817}{14.1925} \approx 0.3158 \quad (31.58\%)$$
-
-### 5.4 Final Probability Table
-
-| Class | Probability | Percentage |
-| :--- | :---: | :---: |
-| Fail | 0.0157 | 1.57% |
-| **Average** | **0.6685** | **66.85%** |
-| Excellent | 0.3158 | 31.58% |
-| **Total** | **1.0000** | **100%** |
-
-Softmax ensures all outputs sum to 1 (or 100%).
-
----
-
-## 6. Final Prediction – Argmax
-
-After calculating probabilities, we select the class with the highest probability value using the **Argmax** operation:
-
-$$\hat{y} = \text{argmax}\Big(P(\text{Fail}), P(\text{Average}), P(\text{Excellent})\Big)$$
-
-$$\hat{y} = \text{argmax}(0.0157, 0.6685, 0.3158)$$
-
-The highest probability is **0.6685**.
-
-$$\mathbf{\text{Final Prediction} = \text{Average}}$$
-
-### Key Takeaways
-- **Logits:** Raw, unscaled linear outputs.
-- **Softmax:** Maps logits to normalized probabilities.
-- **Argmax:** Picks the discrete predicted class with maximum probability.
-
----
-
-## 7. Cross Entropy Loss
-
-Cross Entropy Loss measures the discrepancy between predicted probability distributions and true one-hot encoded targets. It severely penalizes confident wrong predictions.
-
-### Formula
-$$L = -\sum_{k=1}^{K} y_k \ln(p_k)$$
-
-**Where:**
-- $y_k$ = Ground truth one-hot vector value for class $k$
-- $p_k$ = Predicted probability for class $k$
-- $\ln$ = Natural logarithm
-
-### 7.1 Example Calculation
-For our sample student whose actual performance is **Average**:
-- **Actual (One-Hot):** $Y = [0, 1, 0]$
-- **Predicted:** $P = [0.0157, 0.6685, 0.3158]$
-
-Substitute values:
-$$L = - \big[0 \cdot \ln(0.0157) + 1 \cdot \ln(0.6685) + 0 \cdot \ln(0.3158)\big]$$
-
-Terms multiplied by zero vanish:
-$$L = -\ln(0.6685) \approx 0.4029$$
-
-### 7.2 Loss Sensitivity Table
-
-If the actual target is **Average**:
-
-| Average Probability ($p$) | Cross Entropy Loss ($L$) |
-| :---: | :---: |
-| 90.00% | 0.1054 |
-| **66.85%** | **0.4029** |
-| 30.00% | 1.2040 |
-
-- **Lower Loss** = Better predictions.
-- Perfect prediction ($p = 1.0$) yields $L = 0$.
-
----
-
-## 8. Gradient Descent
-
-Gradient Descent optimizes model weights by iteratively minimizing the Cross Entropy Loss function.
-
-### Main Workflow
-1. Initialize weights and biases.
-2. Calculate logits ($z$).
-3. Apply Softmax ($p$).
-4. Calculate Cross Entropy Loss ($L$).
-5. Compute gradients ($\frac{\partial J}{\partial w}, \frac{\partial J}{\partial b}$).
-6. Update parameters ($w, b$).
-7. Repeat until convergence.
-
-### 8.1 Initialization
-For demonstration, set all parameters to zero:
-$$w_{00} = w_{01} = w_{10} = w_{11} = w_{20} = w_{21} = 0$$
+| Fail | 0 | 0 |
+| Average | 0 | 0 |
+| Excellent | 0 | 0 |
 
 - **Learning Rate ($\alpha$):** $0.1$
-- **Total Samples ($n$):** $6$
+- **Number of training samples ($n$):** $9$
 
-### 8.2 Calculate Initial Logits
-Since all weights/biases are $0$:
-$$z_0 = 0, \quad z_1 = 0, \quad z_2 = 0$$
+---
 
-### 8.3 Apply Softmax
-For all classes:
-$$P(\text{class}) = \frac{e^0}{e^0 + e^0 + e^0} = \frac{1}{3} \approx 0.3333$$
+## 4. Calculate Initial Model Scores (Logits)
 
-| Class | Initial Probability |
-| :--- | :---: |
-| Fail | 0.3333 |
-| Average | 0.3333 |
-| Excellent | 0.3333 |
+Using initial weights of zero for every student:
+$$z_0 = 0 + (0 \times X) = 0$$
+$$z_1 = 0 + (0 \times X) = 0$$
+$$z_2 = 0 + (0 \times X) = 0$$
 
-The un-trained model assigns uniform probabilities across all classes.
+Therefore, every student initially receives raw scores: $Z = [0, 0, 0]$.
 
-### 8.4 Prediction Error Calculation
-$$\text{Error} = (p - y)$$
+---
 
-For **Student A** (Actual = Fail, $Y = [1, 0, 0]$):
+## 5. Apply Softmax
 
-| Class | Predicted ($p$) | Actual ($y$) | Error ($p - y$) |
-| :--- | :---: | :---: | :---: |
-| Fail | 0.3333 | 1 | **-0.6667** |
-| Average | 0.3333 | 0 | **0.3333** |
-| Excellent | 0.3333 | 0 | **0.3333** |
+Softmax converts the three logits into normalized probabilities.
 
-### 8.5 Error Table Across All Training Samples
+### 5.1 Formula
+$$P_k = \frac{e^{z_k}}{\sum_{j=1}^{K} e^{z_j}}$$
 
-| Student | $X$ | Target Vector | Fail Error | Average Error | Excellent Error |
+### 5.2 Calculate Initial Probabilities
+Since all logits are zero ($e^0 = 1$ and denominator $= 1 + 1 + 1 = 3$):
+- $P(\text{Fail}) = \frac{1}{3} \approx 33.33\%$
+- $P(\text{Average}) = \frac{1}{3} \approx 33.33\%$
+- $P(\text{Excellent}) = \frac{1}{3} \approx 33.33\%$
+
+| Class | Initial Probability | Percentage |
+| :--- | :---: | :---: |
+| Fail | 0.3333 | 33.33% |
+| Average | 0.3333 | 33.33% |
+| Excellent | 0.3333 | 33.33% |
+| **Total** | **1.0000** | **100%** |
+
+---
+
+## 6. Initial Prediction
+
+Prediction rule: 
+$$\hat{y} = \text{argmax}\big(P(\text{Fail}), P(\text{Average}), P(\text{Excellent})\big)$$
+
+Since all probabilities are equal, the initial model has a tie. The model has not learned anything yet and requires training.
+
+---
+
+## 7. Calculate Initial Cross Entropy Loss
+
+### 7.1 Formula
+$$L = -\sum_{k=1}^{K} y_k \ln(p_k)$$
+
+### 7.2 Calculate Loss for Student A
+- $X = 1$, Actual one-hot: $Y = [1, 0, 0]$, Predicted: $P = [0.3333, 0.3333, 0.3333]$
+- $L = -\ln(0.3333) \approx 1.0986$
+
+Because every student has the same initial probability, **each student's initial loss = 1.0986**.
+
+### 7.3 Average Initial Loss ($J$)
+$$J = \frac{1}{n} \sum_{i=1}^{n} L_i = \frac{9 \times 1.0986}{9} = \mathbf{1.0986}$$
+
+---
+
+## 8. Gradient Descent – Learn the Weights
+
+### 8.1 Gradient Formulas
+- **Weight Gradient:** $\frac{\partial J}{\partial w_k} = \frac{1}{n} \sum (p_{ik} - y_{ik}) X_i$
+- **Bias Gradient:** $\frac{\partial J}{\partial b_k} = \frac{1}{n} \sum (p_{ik} - y_{ik})$
+
+### 8.2 Prediction Errors ($\text{Error} = p - y$)
+
+| Student | $X$ | Target Vector ($Y$) | Fail Error | Average Error | Excellent Error |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| **A** | 1 | $[1, 0, 0]$ | -0.6667 | 0.3333 | 0.3333 |
-| **B** | 2 | $[1, 0, 0]$ | -0.6667 | 0.3333 | 0.3333 |
-| **C** | 3 | $[0, 1, 0]$ | 0.3333 | -0.6667 | 0.3333 |
-| **D** | 4 | $[0, 1, 0]$ | 0.3333 | -0.6667 | 0.3333
+| A | 1 | $[1, 0, 0]$ | -0.6667 | 0.3333 | 0.3333 |
+| B | 2 | $[1, 0, 0]$ | -0.6667 | 0.3333 | 0.3333 |
+| C | 3 | $[1, 0, 0]$ | -0.6667 | 0.3333 | 0.3333 |
+| D | 3 | $[0, 1, 0]$ | 0.3333 | -0.6667 | 0.3333 |
+| E | 4 | $[0, 1, 0]$ | 0.3333 | -0.6667 | 0.3333 |
+| F | 5 | $[0, 1, 0]$ | 0.3333 | -0.6667 | 0.3333 |
+| G | 5 | $[0, 0, 1]$ | 0.3333 | 0.3333 | -0.6667 |
+| H | 6 | $[0, 0, 1]$ | 0.3333 | 0.3333 | -0.6667 |
+| I | 7 | $[0, 0, 1]$ | 0.3333 | 0.3333 | -0.6667 |
+
+### 8.3 Calculate Gradients
+- **Fail Weight Gradient ($\frac{\partial J}{\partial w_0}$):** $\frac{6}{9} = \mathbf{0.6667}$
+- **Average Weight Gradient ($\frac{\partial J}{\partial w_1}$):** $\frac{0}{9} = \mathbf{0.0000}$
+- **Excellent Weight Gradient ($\frac{\partial J}{\partial w_2}$):** $\frac{-6}{9} = \mathbf{-0.6667}$
+- **Bias Gradients ($\frac{\partial J}{\partial b_0}, \frac{\partial J}{\partial b_1}, \frac{\partial J}{\partial b_2}$):** All equal to **$0.0000$**.
+
+---
+
+## 9. Update the Weights
+
+Update rules ($\alpha = 0.1$):
+$$w_{\text{new}} = w_{\text{old}} - \alpha \times \text{Gradient}$$
+$$b_{\text{new}} = b_{\text{old}} - \alpha \times \text{Bias Gradient}$$
+
+- **Fail Weight:** $0 - (0.1 \times 0.6667) = \mathbf{-0.06667}$
+- **Average Weight:** $0 - (0.1 \times 0) = \mathbf{0.00000}$
+- **Excellent Weight:** $0 - (0.1 \times -0.6667) = \mathbf{+0.06667}$
+- **Biases:** Remain **$0$** (since gradients are zero).
+
+### Updated Parameters After Iteration 1
+
+| Class | Updated Bias ($b$) | Updated Weight ($w$) |
+| :--- | :---: | :---: |
+| Fail | 0 | -0.06667 |
+| Average | 0 | 0.00000 |
+| Excellent | 0 | +0.06667 |
+
+---
+
+## 10. Repeat Training – Iteration 2 and Beyond
+
+Using the updated parameters, compute new logits:
+- $z_0 = -0.06667 X$
+- $z_1 = 0$
+- $z_2 = 0.06667 X$
+
+Repeat the iterative loop (Logits $\rightarrow$ Softmax $\rightarrow$ Loss $\rightarrow$ Gradients $\rightarrow$ Parameter Updates).
+
+### Training Loss Progress Table
+
+| Iteration | Average Training Loss ($J$) |
+| :---: | :---: |
+| 0 | 1.0986 |
+| 1 | 1.0380 |
+| 2 | 1.0269 |
+| 5 | 1.0135 |
+| 10 | 0.9957 |
+| 20 | 0.9628 |
+| 50 | 0.8812 |
+| 100 | 0.7863 |
+| 200 | 0.6771 |
+| 500 | 0.5460 |
+| 1,000 | 0.4679 |
+| 2,000 | 0.4094 |
+| 5,000 | 0.3591 |
+
+As iterations increase, training loss steadily decreases, confirming successful model optimization.
+
+---
+
+## 11. When Should We Stop Training?
+
+We can stop Gradient Descent using one or more stopping conditions:
+
+### Condition 1 – Maximum Iterations (Epochs)
+Set a predetermined maximum number of training steps (e.g., 5,000 iterations). Once reached, training stops.
+
+### Condition 2 – Loss Convergence (Tolerance)
+Monitor the change in average loss ($\Delta J$) between consecutive iterations. If the improvement falls below a threshold (e.g., $\Delta J < 10^{-5}$) for several consecutive epochs, training terminates.
+
+### Condition 3 – Early Stopping (Validation Loss)
+Monitor performance on a separate validation dataset. If training loss continues to drop while validation loss starts increasing (indicating overfitting), training is halted early.
+
+---
+
+## 12. Final Prediction Using Trained Weights
+
+Once optimal weights and biases are learned through training iterations (e.g., after 5,000 epochs):
+1. For any new student study hours ($X_{\text{new}}$), compute the three class logits:  
+   $$z_k = b_k + w_k X_{\text{new}}$$
+2. Pass through Softmax to get probabilities $P_k$.
+3. Use Argmax to choose the class with the highest probability:
+   $$\hat{y} = \text{argmax}\big(P(\text{Fail}), P(\text{Average}), P(\text{Excellent})\big)$$
+
+---
+
+## 13. Model Evaluation
+
+Evaluate the final model performance across the dataset using common metrics:
+- **Accuracy:** Ratio of correct predictions to total samples.
+- **Confusion Matrix:** $3 \times 3$ grid comparing actual classes vs predicted classes.
+- **Precision, Recall, and F1-Score:** Evaluated per class to handle overlapping boundary cases effectively.
